@@ -1,6 +1,6 @@
 {
   "name": "hexo-pro-desktop",
-  "version": "1.0.0-beta.6",
+  "version": "2.0.0",
   "description": "Hexo Pro 桌面客户端 - 一个基于 Electron 的 Hexo 博客管理工具",
   "main": "src/main/main.js",
   "overrides": {
