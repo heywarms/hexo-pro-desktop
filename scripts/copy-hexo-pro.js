@@ -60,12 +60,15 @@ async function copyHexoProCore() {
       'deploy_api.js',
       'settings_api.js',
       'auth_api.js',
+      'mcp_api.js',
+      'mcp_token.js',
       'ai_api.js',
       'theme_api.js',
       'schema_generator.js',
       'db.js',
       'utils.js',
       'debug.js',
+      'headless_server.js',
       'update.js',
       'recycle_api.js'
     ];
@@ -88,6 +91,7 @@ async function copyHexoProCore() {
     const wwwTargetDir = path.join(targetDir, 'www');
     
     if (await fs.pathExists(wwwSourceDir)) {
+      await fs.remove(wwwTargetDir);
       await fs.copy(wwwSourceDir, wwwTargetDir);
       console.log('复制前端资源: www/');
     } else {
