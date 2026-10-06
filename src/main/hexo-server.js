@@ -21,6 +21,7 @@ const fetch = (() => {
 
 // 复制 hexo-pro 的核心模块
 const api = require('./hexo-pro-core/api');
+const { getLiveHexo } = require('./hexo-pro-core/theme_runtime');
 const databaseManager = require('./hexo-pro-core/database-manager'); // 导入数据库管理器
 
 class HexoProServer {
@@ -602,12 +603,12 @@ class HexoProServer {
       const Hexo = require('hexo');
 
       // 创建 Hexo 实例
-      this.hexoInstance = new Hexo(this.projectPath, {
+      this.hexoInstance = getLiveHexo(new Hexo(this.projectPath, {
         debug: false,
         safe: false,
         silent: false,
         config: path.join(this.projectPath, '_config.yml')
-      });
+      }));
 
       console.log('[Hexo Server]: Hexo 实例创建完成');
 
@@ -1215,4 +1216,4 @@ class HexoProServer {
   }
 }
 
-module.exports = HexoProServer; 
+module.exports = HexoProServer;
