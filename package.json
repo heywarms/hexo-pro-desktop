@@ -1,6 +1,6 @@
 {
   "name": "hexo-pro-desktop",
-  "version": "2.1.0-beta.2",
+  "version": "2.1.0-beta.3",
   "description": "Hexo Pro \u684c\u9762\u5ba2\u6237\u7aef - \u4e00\u4e2a\u57fa\u4e8e Electron \u7684 Hexo \u535a\u5ba2\u7ba1\u7406\u5de5\u5177",
   "main": "src/main/bootstrap.js",
   "engines": {
