@@ -1,7 +1,7 @@
 {
   "name": "hexo-pro-desktop",
-  "version": "2.1.0-beta.1",
-  "description": "Hexo Pro 桌面客户端 - 一个基于 Electron 的 Hexo 博客管理工具",
+  "version": "2.1.0-beta.3",
+  "description": "Hexo Pro \u684c\u9762\u5ba2\u6237\u7aef - \u4e00\u4e2a\u57fa\u4e8e Electron \u7684 Hexo \u535a\u5ba2\u7ba1\u7406\u5de5\u5177",
   "main": "src/main/bootstrap.js",
   "engines": {
     "node": ">=22.12.0"
@@ -15,20 +15,20 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "dev:react": "echo '开发模式下直接使用已构建的前端资源'",
-    "build": "yarn copy-core && yarn build:react && yarn build:electron",
-    "build:react": "echo '前端资源由父项目构建，跳过此步骤'",
+    "dev:react": "echo '\u5f00\u53d1\u6a21\u5f0f\u4e0b\u76f4\u63a5\u4f7f\u7528\u5df2\u6784\u5efa\u7684\u524d\u7aef\u8d44\u6e90'",
+    "build": "yarn build:react && yarn copy-core && yarn build:electron",
+    "build:react": "yarn --cwd .. build",
     "build:electron": "electron-builder --publish never",
-    "dist": "yarn build && electron-builder --publish=never",
-    "dist:all": "yarn build && electron-builder --mac --win --linux --publish=never",
-    "dist:mac": "yarn build && electron-builder --mac --publish=never",
-    "dist:win": "yarn build && electron-builder --win --publish=never",
-    "dist:linux": "yarn build && electron-builder --linux --publish=never",
-    "dist:publish": "yarn build && electron-builder --mac --win --linux --publish always",
-    "dist:publish:current": "yarn build && electron-builder --publish always",
-    "dist:publish:mac": "yarn build && electron-builder --mac --publish always",
-    "dist:publish:win": "yarn build && electron-builder --win --publish always",
-    "dist:publish:linux": "yarn build && electron-builder --linux --publish always",
+    "dist": "yarn build:react && yarn copy-core && electron-builder --publish never",
+    "dist:all": "yarn build:react && yarn copy-core && electron-builder --mac --win --linux --publish never",
+    "dist:mac": "yarn build:react && yarn copy-core && electron-builder --mac --publish never",
+    "dist:win": "yarn build:react && yarn copy-core && electron-builder --win --publish never",
+    "dist:linux": "yarn build:react && yarn copy-core && electron-builder --linux --publish never",
+    "dist:publish": "yarn build:react && yarn copy-core && electron-builder --mac --win --linux --config.mac.forceCodeSigning=true --publish always",
+    "dist:publish:current": "yarn build:react && yarn copy-core && electron-builder --config.mac.forceCodeSigning=true --publish always",
+    "dist:publish:mac": "yarn build:react && yarn copy-core && electron-builder --mac --config.mac.forceCodeSigning=true --publish always",
+    "dist:publish:win": "yarn build:react && yarn copy-core && electron-builder --win --config.mac.forceCodeSigning=true --publish always",
+    "dist:publish:linux": "yarn build:react && yarn copy-core && electron-builder --linux --config.mac.forceCodeSigning=true --publish always",
     "pack": "electron-builder --dir",
     "copy-core": "node scripts/copy-hexo-pro.js",
     "postinstall": "electron-builder install-app-deps",
@@ -37,7 +37,10 @@
     "generate-icons": "node scripts/generate-icon.js",
     "create-test-icons": "node scripts/create-placeholder-icon.js",
     "create-working-icons": "node scripts/create-simple-icon.js",
-    "setup-icons": "yarn generate-icons && yarn create-working-icons"
+    "setup-icons": "yarn generate-icons && yarn create-working-icons",
+    "prepare:runtime": "node scripts/prepare-runtime.js",
+    "prestart": "npm run prepare:runtime",
+    "predev": "npm run prepare:runtime"
   },
   "keywords": [
     "hexo",
@@ -51,7 +54,9 @@
   "devDependencies": {
     "electron": "^43.7.9",
     "electron-builder": "^26.15.3",
-    "rimraf": "^5.0.0"
+    "rimraf": "^5.0.0",
+    "tar": "7.5.22",
+    "extract-zip": "2.0.1"
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
@@ -100,7 +105,7 @@
         "provider": "github",
         "owner": "heywarms",
         "repo": "hexo-pro",
-        "releaseType": "prerelease"
+        "releaseType": "draft"
       }
     ],
     "files": [
@@ -148,7 +153,18 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "extraResources": [
+        {
+          "from": "resources/runtime/darwin-${arch}",
+          "to": "runtime/darwin-${arch}",
+          "filter": [
+            "**/*",
+            "**/.*"
+          ]
+        }
+      ],
+      "mergeASARs": false
     },
     "win": {
       "icon": "assets/icon.ico",
@@ -158,6 +174,16 @@
           "arch": [
             "x64",
             "ia32"
+          ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "resources/runtime/win32-${arch}",
+          "to": "runtime/win32-${arch}",
+          "filter": [
+            "**/*",
+            "**/.*"
           ]
         }
       ]
@@ -171,11 +197,38 @@
             "x64"
           ]
         }
+      ],
+      "extraResources": [
+        {
+          "from": "resources/runtime/linux-${arch}",
+          "to": "runtime/linux-${arch}",
+          "filter": [
+            "**/*",
+            "**/.*"
+          ]
+        }
       ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    }
+    },
+    "electronUpdaterCompatibility": ">=2.16",
+    "beforePack": "scripts/before-pack.js",
+    "afterPack": "scripts/verify-pack.js",
+    "asarUnpack": [
+      "src/main/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/templates",
+        "to": "templates",
+        "filter": [
+          "default/**/*",
+          "default/**/.*"
+        ]
+      }
+    ]
   }
 }

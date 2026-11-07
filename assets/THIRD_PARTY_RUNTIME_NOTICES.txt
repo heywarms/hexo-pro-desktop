@@ -1,0 +1,24 @@
+Hexo Pro Desktop bundled runtime
+
+Node.js 22.23.3 (including npm 10.9.9)
+Distribution: https://nodejs.org/dist/v22.23.3/
+Source: https://nodejs.org/dist/v22.23.3/node-v22.23.3.tar.gz
+The Node distribution's LICENSE and npm's own license files are retained in
+runtime/<platform>-<arch>/node/.
+
+Git 2.53.0, distributed using GitHub Desktop's dugite-native v2.53.0-4
+Distribution and build information:
+https://github.com/desktop/dugite-native/releases/tag/v2.53.0-4
+https://github.com/desktop/dugite-native/tree/v2.53.0-4
+Git source: https://github.com/git/git/tree/v2.53.0
+Git for Windows source: https://github.com/git-for-windows/git/tree/v2.53.0.windows.4
+Git is licensed under GNU GPL version 2. See licenses/Git-COPYING.txt.
+The portable distribution also contains helper components. Their included
+notices and license files are retained with that distribution.
+
+The default blog includes Hexo, Landscape, Fork Awesome and Source Code Pro.
+Their package license files are retained in the shipped template. A local copy
+of Landscape changes its font/icon URLs to bundled assets for offline preview.
+The exact versions and package integrity hashes are recorded in the template's
+package-lock.json. Runtime archive URLs and SHA-256 hashes are recorded in each
+runtime's manifest.json.

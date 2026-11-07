@@ -518,7 +518,7 @@ class HexoProServer {
       }
 
       // 动态引入 Hexo
-      const Hexo = require('hexo');
+      const Hexo = require(require.resolve('hexo', { paths: [this.projectPath] }));
 
       // 创建 Hexo 实例
       this.hexoInstance = getLiveHexo(new Hexo(this.projectPath, {
@@ -1079,9 +1079,7 @@ class HexoProServer {
           console.log(`[Hexo Server]: 尝试在端口 ${port} 启动基本服务器...`);
 
           // Windows系统特殊处理
-          const serverOptions = platform === 'win32' ? {
-            host: '127.0.0.1' // Windows上明确使用localhost
-          } : {};
+          const serverOptions = { host: '127.0.0.1' };
 
           this.server = this.app.listen(port, serverOptions.host, (err) => {
             if (err) {

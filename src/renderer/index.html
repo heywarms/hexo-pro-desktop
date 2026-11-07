@@ -103,6 +103,21 @@
             margin: 0.25rem 0;
             color: #666;
         }
+
+        .update-panel {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+            color: #444;
+            font-size: 0.875rem;
+            overflow-wrap: anywhere;
+        }
+
+        .update-panel .btn {
+            padding: 0.5rem 0.75rem;
+            margin: 0.75rem 0.25rem 0;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
@@ -124,13 +139,17 @@
             <button id="btn-open-project" class="btn">打开项目</button>
             <button id="btn-create-project" class="btn">新建项目</button>
         </div>
+        <section id="update-panel" class="update-panel" aria-label="应用更新" hidden>
+            <p id="update-status" role="status"></p>
+            <button id="update-check" class="btn" disabled>检查更新</button>
+            <button id="update-download" class="btn" hidden>下载更新</button>
+            <button id="update-install" class="btn" hidden>重启安装</button>
+        </section>
     </div>
 
     <script>
         class HexoProDesktop {
             constructor() {
-                this.apiBaseUrl = 'http://localhost:4000/hexopro/api';
-                this.webUrl = 'http://localhost:4000/pro';
                 this.startTime = Date.now();
                 this.connectionFailureCount = 0;
                 // 冷启动阶段服务可能尚未监听端口，避免短暂闪现错误提示
@@ -151,7 +170,10 @@
                 const elapsedMs = Date.now() - this.startTime;
                 
                 try {
-                    const response = await fetch(`${this.apiBaseUrl}/desktop/status`, { cache: 'no-store' });
+                    const { serverUrl } = await window.electronAPI.getProjectInfo();
+                    if (!serverUrl) throw new Error('当前应用的服务器尚未就绪');
+                    const response = await fetch(new URL('/hexopro/api/desktop/status', serverUrl).href, { cache: 'no-store' });
+                    if (!response.ok) throw new Error(`服务器状态检查失败 (${response.status})`);
                     const data = await response.json();
                     this.connectionFailureCount = 0;
                     
@@ -243,5 +265,6 @@
             new HexoProDesktop();
         });
     </script>
+    <script src="updater.js"></script>
 </body>
 </html> 

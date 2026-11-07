@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新建项目</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #fff; --surface: #f5f7fb; --text: #182333; --muted: #526174; --line: #ccd3df; --accent: #245bd6; --error: #ba2626; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #171b24; --surface: #242a37; --text: #e8edf6; --muted: #b0bdd1; --line: #555f70; --accent: #87b1ff; --error: #ff9999; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    h1 { margin: 0 0 4px; font-size: 24px; } p { margin: 0 0 20px; color: var(--muted); }
+    fieldset { border: 0; padding: 0; margin: 0 0 20px; } legend, label.field { display: block; font-weight: 600; margin-bottom: 6px; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .choice { padding: 12px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+    .choice:has(input:checked) { border-color: var(--accent); background: var(--surface); }
+    .choice small { display: block; margin: 4px 0 0 22px; color: var(--muted); font-weight: 400; }
+    input:not([type=radio]), select { width: 100%; min-height: 42px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
+    input[type=radio] { accent-color: var(--accent); } :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .fieldGroup { margin-bottom: 16px; } .row { display: flex; gap: 10px; align-items: center; } .row > input { min-width: 0; flex: 1; }
+    small, .help { color: var(--muted); font-size: 12px; } .help { margin: 6px 0 0; }
+    button { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: var(--bg); color: var(--text); cursor: pointer; white-space: nowrap; }
+    button:disabled { opacity: .5; cursor: default; } button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+    button.link { color: var(--accent); border: 0; padding-inline: 0; } footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+    #error { color: var(--error); margin: 12px 0; overflow-wrap: anywhere; } #status { color: var(--muted); margin: 8px 0; }
+    [hidden] { display: none !important; }
+    @media (max-width: 480px) { body { padding: 20px; } .choices { grid-template-columns: 1fr; } .row { flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+  <h1>新建项目</h1>
+  <p>从空白博客开始，或把 GitHub 上的博客带到这台电脑。</p>
+  <form id="projectForm">
+    <fieldset>
+      <legend>项目来源</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="source" value="template" checked> 新建空白博客<small>使用默认 Hexo 模板</small></label>
+        <label class="choice"><input type="radio" name="source" value="github"> 从 GitHub 导入<small>恢复已有文章、主题和配置</small></label>
+      </div>
+    </fieldset>
+    <section id="githubFields" hidden aria-label="GitHub 仓库连接">
+      <div class="fieldGroup">
+        <label class="field" for="githubToken">GitHub 访问凭据</label>
+        <div class="row"><input id="githubToken" type="password" autocomplete="off" placeholder="Personal Access Token"><button id="loadRepos" type="button">读取仓库</button></div>
+        <div class="help">导入需要仓库 Contents 读取权限。之后双向同步时，还需要写入权限。</div>
+      </div>
+      <div class="fieldGroup">
+        <label class="field" for="repositoryChoice">源码仓库</label>
+        <select id="repositoryChoice"><option value="">手动输入仓库地址</option></select>
+        <button type="button" id="moreRepos" class="link" hidden>加载更多仓库</button>
+        <input id="repository" aria-label="GitHub 源码仓库地址" placeholder="owner/blog 或 https://github.com/owner/blog" style="margin-top:8px">
+        <div class="help">选择保存 Markdown 和 _config.yml 的源码仓库。</div>
+      </div>
+      <div class="fieldGroup">
+        <label class="field" for="branch">源码分支</label>
+        <div class="row"><input id="branch" list="branches" placeholder="读取后自动选择默认分支"><button id="loadBranches" type="button">读取分支</button></div>
+        <datalist id="branches"></datalist>
+        <button type="button" id="moreBranches" class="link" hidden>加载更多分支</button>
+      </div>
+      <p class="help">直接恢复到新的本机目录，不会先生成默认模板，也不会向 GitHub 上传文件。导入后会自动连接云同步并安装博客依赖。</p>
+    </section>
+    <div class="fieldGroup" style="margin-top:20px">
+      <label class="field" for="projectName">本机项目名称</label>
+      <input id="projectName" placeholder="my-blog" required maxlength="100" autofocus>
+      <div class="help">用英文字母、数字、连字符或下划线命名。下一步选择保存位置。</div>
+    </div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div id="error" role="alert" hidden></div>
+    <footer><button type="button" id="cancel">取消</button><button type="submit" class="primary" id="continue">下一步</button></footer>
+  </form>
+  <script>
+    const api = window.desktopDialog;
+    const el = id => document.getElementById(id);
+    let busy = false, version = 0, repoPage = null, branchPage = null, suggestedName = '';
+    const repositoryName = value => value.trim().replace(/^https:\/\/github\.com\//, '').replace(/^git@github\.com:/, '').replace(/\.git\/?$/, '').replace(/\/$/, '');
+    const setError = message => { el('error').textContent = message; el('error').hidden = !message; };
+    function setBusy(value) {
+      busy = value;
+      for (const id of ['loadRepos', 'moreRepos', 'loadBranches', 'moreBranches', 'continue']) el(id).disabled = value;
+      el('status').textContent = value ? '正在读取 GitHub…' : '';
+    }
+    function suggestProjectName(repo) {
+      const name = (repo.split('/')[1] || '').replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^[-_]+|[-_]+$/g, '').slice(0, 100);
+      if (!el('projectName').value || el('projectName').value === suggestedName) { el('projectName').value = name; suggestedName = name; }
+    }
+    async function query(action, page = 1) {
+      if (busy) return;
+      const revision = version;
+      setError(''); setBusy(true);
+      try {
+        const repository = repositoryName(el('repository').value);
+        const result = await api.queryProjectSource({ action, page, repository, githubToken: el('githubToken').value.trim() });
+        if (revision !== version) return;
+        if (action === 'repositories') {
+          if (page === 1) el('repositoryChoice').replaceChildren(new Option('手动输入仓库地址', ''));
+          for (const item of result.items) el('repositoryChoice').add(new Option(item.name + (item.private ? ' · 私有' : ''), item.name));
+          repoPage = result.nextPage; el('moreRepos').hidden = !repoPage;
+          el('status').textContent = result.items.length ? '仓库已读取，请选择源码仓库。' : '没有可用仓库，请检查凭据的仓库授权范围，或手动输入地址。';
+        } else {
+          if (page === 1) el('branches').replaceChildren();
+          for (const item of result.items) el('branches').append(new Option(item.name, item.name));
+          if (page === 1) el('branch').value = result.defaultBranch || result.items[0]?.name || '';
+          branchPage = result.nextPage; el('moreBranches').hidden = !branchPage;
+          suggestProjectName(repository);
+          el('status').textContent = result.items.length ? '分支已读取，可选择或直接输入分支名。' : '仓库没有分支，暂时无法导入。';
+        }
+      } catch (error) { if (revision === version) setError(error.message); }
+      finally {
+        const status = el('status').textContent;
+        setBusy(false);
+        if (revision === version && status !== '正在读取 GitHub…') el('status').textContent = status;
+      }
+    }
+    function invalidateBranches() { version++; branchPage = null; el('branch').value = ''; el('branches').replaceChildren(); el('moreBranches').hidden = true; setError(''); }
+    document.querySelectorAll('input[name=source]').forEach(input => input.addEventListener('change', () => {
+      version++; setError(''); el('status').textContent = '';
+      el('githubFields').hidden = document.querySelector('input[name=source]:checked').value !== 'github';
+    }));
+    el('githubToken').addEventListener('input', () => {
+      invalidateBranches(); repoPage = null; el('moreRepos').hidden = true;
+      el('repositoryChoice').replaceChildren(new Option('手动输入仓库地址', '')); el('repository').hidden = false;
+    });
+    el('repository').addEventListener('input', invalidateBranches);
+    el('repository').addEventListener('change', () => suggestProjectName(repositoryName(el('repository').value)));
+    el('repositoryChoice').addEventListener('change', () => {
+      invalidateBranches(); el('repository').value = el('repositoryChoice').value; el('repository').hidden = Boolean(el('repositoryChoice').value);
+      if (el('repositoryChoice').value) query('branches'); else el('repository').focus();
+    });
+    el('loadRepos').onclick = () => query('repositories');
+    el('moreRepos').onclick = () => query('repositories', repoPage);
+    el('loadBranches').onclick = () => query('branches');
+    el('moreBranches').onclick = () => query('branches', branchPage);
+    el('cancel').onclick = () => api.cancelProjectSource();
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') api.cancelProjectSource(); });
+    el('projectForm').addEventListener('submit', event => {
+      event.preventDefault(); if (busy) return;
+      setError('');
+      const projectName = el('projectName').value.trim();
+      if (!/^[a-z\d](?:[a-z\d_-]*[a-z\d])?$/i.test(projectName) || projectName.includes('--') || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(projectName)) {
+        setError('项目名称格式不正确，请使用字母或数字开头和结尾，不要使用系统保留名或连续连字符。'); el('projectName').focus(); return;
+      }
+      const source = document.querySelector('input[name=source]:checked').value;
+      const githubToken = el('githubToken').value.trim(), repository = repositoryName(el('repository').value), branch = el('branch').value.trim();
+      if (source === 'github') {
+        if (!githubToken || !/^[\x21-\x7e]+$/.test(githubToken)) { setError('请填写完整的 GitHub 访问凭据。'); el('githubToken').focus(); return; }
+        if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) { setError('请选择或输入 owner/repo 格式的源码仓库。'); return; }
+        if (!branch || branch.startsWith('-') || /[\s\x00-\x1f\x7f]/.test(branch)) { setError('请选择或输入有效的源码分支。'); el('branch').focus(); return; }
+      }
+      api.submitProjectSource({ source, projectName, ...(source === 'github' ? { repository, branch, githubToken } : {}) });
+    });
+  </script>
+</body>
+</html>

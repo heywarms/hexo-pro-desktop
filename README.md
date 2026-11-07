@@ -15,6 +15,9 @@ Hexo Pro Desktop 是 hexo-pro 插件的桌面版本，提供了一个独立的�
 - **无缝体验**: 自动跳转到Web管理界面，无需手动配置
 - **菜单集成**: 完整的原生菜单支持
 - **错误处理**: 完善的错误提示和恢复机制
+- **自动更新**: 启动后及每 4 小时检查更新，支持后台下载、进度提示和保存内容后重启安装；可在「帮助与更新」关闭自动下载。
+
+更新发布流程、各平台签名与安装包要求见 [桌面自动更新说明](docs/AUTO_UPDATE.md)。发布命令先构建父项目前端再打包，上传到 GitHub Release 草稿；核对后发布草稿即可供客户端检查。
 
 ### 🔐 完整认证系统
 - **安全登录**: 支持用户注册和登录，完全兼容Web版本
@@ -41,11 +44,44 @@ Hexo Pro Desktop 是 hexo-pro 插件的桌面版本，提供了一个独立的�
 
 ## 系统要求
 
-- **操作系统**: Windows 10+, macOS 12+, Ubuntu 18.04+（推荐 Ubuntu 22.04+）
-- **运行环境**: 预构建客户端自带兼容 Hexo 8 的 Node.js，无需单独安装 Node.js
+- **操作系统**: Windows 10+, macOS 12+, Ubuntu 22.04+
+- **运行环境**: 安装包自带 Node.js、npm 和 Git，无需安装系统 Node、Git 或全局 Hexo CLI
 - **源码开发/构建**: Node.js 22.12.0+、Yarn 1.x
 - **内存**: 4GB 以上推荐
-- **硬盘**: 500MB 可用空间
+- **硬盘**: 建议至少 2GB 可用空间，另需博客文件与下载缓存空间
+
+### 无需配置环境
+
+新建博客直接复制应用内置的 Landscape 模板、示例文章和预装依赖，断网也可以创建、编辑、预览及生成静态文件。默认主题的字体和图标也随应用提供。
+
+打开已有博客时，应用会使用自带 npm 安装依赖，并为自带 Node 重建插件；完成后会记录状态，未变化的博客再次打开无需安装。导入、安装新主题和在线发布需要网络。博客文件保存在用户选择的目录中，创建失败不会覆盖已有文件，启动失败也不会删除已创建的博客。
+
+主题下载、GitHub 同步、Git 发布及云平台发布命令都使用私有工具路径。应用不修改系统 PATH 或全局 npm 安装；下载缓存保存在应用用户数据目录。发布仍需在界面中连接用户自己的账号。含有额外系统程序或需要本地编译器的第三方插件，仍需相应平台的预编译版本。
+
+### 内置环境的构建与验证
+
+`yarn dev` / `yarn start` 会先准备本机运行资源；所有 electron-builder 构建入口通过 `beforePack` 自动准备目标平台的资源。首次构建需要下载，后续使用校验后的本地缓存。也可以手动执行：
+
+```bash
+yarn prepare:runtime
+# 交叉打包的资源准备示例
+node scripts/prepare-runtime.js win32 x64
+```
+
+- `scripts/runtime/releases.json` 固定 Node 22.23.3、npm 10.9.9、Git 2.53.0 的官方分发地址与 SHA-256；更新时应同时更新版本、校验值及验证结果。
+- Git 使用 GitHub Desktop 的 dugite-native 完整可移植发行包，保留 HTTPS 支持、辅助程序和相关通知文件。
+- `templates/default/package-lock.json` 固定默认博客的依赖。构建模板时禁用安装脚本、排除可选原生依赖，并提供 Windows 和 POSIX 启动脚本。
+- `resources/` 和 `.runtime-cache/` 是生成目录，不提交源码。缺少资源或校验失败会阻止打包，不回退到用户系统里的命令。
+- 博客服务运行在内置标准 Node 子进程中；Electron 负责窗口和安全凭据。服务代码及其依赖通过 `asarUnpack` 放到标准 Node 可读取的位置。
+- `afterPack` 检查安装包实际包含 Node/npm/Git、博客服务和模板依赖。macOS Universal 包分别保留两个架构的私有环境。
+
+在上级客户端仓库可运行真实离线集成测试：
+
+```bash
+HEXOPRO_RUNTIME_INTEGRATION=1 node --test test/desktop-bundled-integration.test.js
+```
+
+测试覆盖离线创建、HTTP 预览、生成、主题安装、已有项目导入和向本地测试仓库发布。可通过 `HEXOPRO_BUNDLED_RESOURCES` 与 `HEXOPRO_WORKER_PATH` 指向解包后的安装包，以验证实际分发产物。Windows / Linux 的实际安装与系统兼容性还应在对应系统上验证。
 
 ## 安装方法
 

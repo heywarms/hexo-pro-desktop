@@ -48,3 +48,7 @@ yarn-error.log*
 .cursor/*
 
 dist/*
+# Downloaded, checksum-verified build inputs
+/resources/
+/.runtime-cache/
+/templates/default/node_modules/

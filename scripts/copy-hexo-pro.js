@@ -9,7 +9,7 @@ const REQUIRED_CORE_FILES = [
   'theme_api.js', 'theme_runtime.js', 'preview_api.js', 'document_identity.js',
   'sync_api.js', 'sync_service.js', 'source_sync.js', 'cloud_sync.js',
   'schema_generator.js', 'db.js', 'utils.js', 'debug.js', 'headless_server.js',
-  'update.js', 'recycle_api.js', 'auth_security.js', 'document_write.js', 'node-runtime.js'
+  'process-tools.js', 'update.js', 'recycle_api.js', 'auth_security.js', 'document_write.js', 'node-runtime.js'
 ];
 
 function findHexoProDirectory(scriptDir = __dirname, override = process.env.HEXO_PRO_CORE_PATH) {
