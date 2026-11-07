@@ -596,7 +596,7 @@ class HexoProDesktop {
           {
             label: '访问官网',
             click: () => {
-              shell.openExternal('https://github.com/wuzheng228/hexo-pro');
+              shell.openExternal('https://github.com/heywarms/hexo-pro');
             }
           }
         ]

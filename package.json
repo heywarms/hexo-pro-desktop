@@ -49,7 +49,7 @@
     "electron",
     "management"
   ],
-  "author": "wuzheng",
+  "author": "heywarms",
   "license": "MIT",
   "devDependencies": {
     "electron": "^43.7.9",

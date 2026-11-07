@@ -25,7 +25,7 @@
     "react-native",
     "expo"
   ],
-  "author": "wuzheng",
+  "author": "heywarms",
   "license": "MIT",
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",
