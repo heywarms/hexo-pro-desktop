@@ -304,7 +304,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 致谢
 
-- [hexo-pro](https://github.com/wuzheng228/hexo-pro) - 原始插件项目
+- [hexo-pro](https://github.com/heywarms/hexo-pro) - 原始插件项目
 - [Electron](https://electronjs.org/) - 桌面应用框架
 - [React](https://reactjs.org/) - 前端框架
 - [Ant Design](https://ant.design/) - UI 组件库
